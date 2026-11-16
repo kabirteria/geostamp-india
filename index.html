@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
+<title>GeoStamp India</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* layout: one working column — intake panel, then a stack of photo cards (preview | facts), then three reference notes */
+:root {
+  --bg: #eef2f1;
+  --surface: #ffffff;
+  --sunk: #f6f8f7;
+  --ink: #13222a;
+  --muted: #56666e;
+  --line: #d5dedd;
+  --accent: #0b6457;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcefe9;
+  --ok: #1d6f37; --ok-bg: #e2f2e6;
+  --warn: #8a5200; --warn-bg: #fbefd9;
+  --bad: #ac2216; --bad-bg: #fbe5e2;
+  --info: #31556e; --info-bg: #e3edf4;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1719; --surface: #172225; --sunk: #121b1e; --ink: #e4ecea; --muted: #97a8ad; --line: #2a3a3e;
+    --accent: #4fc2ac; --accent-ink: #062520; --accent-soft: #173a35;
+    --ok: #7fd39a; --ok-bg: #173323; --warn: #f0b55a; --warn-bg: #3a2b12; --bad: #ff8f84; --bad-bg: #3e1a17;
+    --info: #9cc3de; --info-bg: #1a2c38;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1719; --surface: #172225; --sunk: #121b1e; --ink: #e4ecea; --muted: #97a8ad; --line: #2a3a3e;
+  --accent: #4fc2ac; --accent-ink: #062520; --accent-soft: #173a35;
+  --ok: #7fd39a; --ok-bg: #173323; --warn: #f0b55a; --warn-bg: #3a2b12; --bad: #ff8f84; --bad-bg: #3e1a17;
+  --info: #9cc3de; --info-bg: #1a2c38;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+}
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 22px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(26px, 4.2vw, 36px); font-weight: 800; }
+h2 { font-size: 19px; font-weight: 700; }
+h3 { font-size: 16px; font-weight: 700; }
+p { margin: 0; }
+a { color: var(--accent); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+
+header { display: grid; gap: 8px; }
+header .lede { color: var(--muted); max-width: 64ch; }
+
+.intake {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 20px; display: grid; gap: 16px;
+}
+.drop {
+  border: 2px dashed var(--line); border-radius: 12px; background: var(--sunk);
+  padding: 22px 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px;
+  transition: border-color .15s, background .15s;
+}
+.drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop .hint { color: var(--muted); flex: 1 1 260px; min-width: 0; }
+.btn {
+  appearance: none; border: 1px solid transparent; border-radius: 10px; cursor: pointer;
+  font: 600 15px/1 var(--font-body); padding: 12px 18px; display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent); color: var(--accent-ink); text-decoration: none;
+}
+.btn:hover { filter: brightness(1.06); }
+.btn:focus-visible, select:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.btn.secondary { background: transparent; color: var(--accent); border-color: var(--accent); }
+.btn[disabled] { opacity: .5; cursor: default; filter: none; }
+.row { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+label.field { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
+select {
+  font: 500 14px var(--font-body); color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; max-width: 100%;
+}
+.netnote { font-size: 13px; color: var(--muted); }
+
+.cards { display: grid; gap: 16px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+  display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+}
+.card.example { border-style: dashed; }
+.shot { background: var(--sunk); display: grid; place-items: center; min-height: 220px; border-right: 1px solid var(--line); }
+.shot img { display: block; width: 100%; height: auto; max-height: 560px; object-fit: contain; }
+.shot .placeholder { color: var(--muted); font-size: 14px; padding: 24px; text-align: center; }
+.facts { padding: 18px 18px 20px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.facts .top { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; justify-content: space-between; }
+.fname { font-weight: 600; overflow-wrap: anywhere; min-width: 0; }
+.chip {
+  font-size: 12px; font-weight: 600; letter-spacing: .03em; padding: 4px 9px; border-radius: 999px; white-space: nowrap;
+}
+.chip.ok { color: var(--ok); background: var(--ok-bg); }
+.chip.warn { color: var(--warn); background: var(--warn-bg); }
+.chip.bad { color: var(--bad); background: var(--bad-bg); }
+.chip.info { color: var(--info); background: var(--info-bg); }
+dl.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 0; font-size: 14px; }
+dl.kv dt { color: var(--muted); }
+dl.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+ul.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+ul.checks li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; align-items: start; }
+ul.checks .dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; }
+.dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); } .dot.info { background: var(--info); }
+.status { font-size: 13px; color: var(--muted); }
+.status.err { color: var(--bad); }
+.fix { background: var(--bad-bg); color: var(--ink); border-radius: 10px; padding: 12px 14px; font-size: 14px; display: grid; gap: 8px; }
+.fix ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.bulk { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+
+.notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.note { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 10px; align-content: start; }
+.note ul, .note ol { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
+.note .small { font-size: 12.5px; color: var(--muted); }
+.spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent); animation: sp 0.9s linear infinite; }
+@keyframes sp { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } .drop { transition: none; } }
+@media (max-width: 820px) {
+  .card { grid-template-columns: minmax(0, 1fr); }
+  .shot { border-right: 0; border-bottom: 1px solid var(--line); }
+  .notes { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">For MCA / ROC filings</span>
+    <h1>GeoStamp India</h1>
+    <p class="lede">Turns iPhone photos of your registered office into geo-tagged photos. The location and time printed on each photo come only from the GPS and clock data your phone saved when the photo was taken. Nothing can be typed in or changed here.</p>
+  </header>
+
+  <section class="intake" aria-label="Add photos">
+    <div class="drop" id="drop">
+      <button class="btn" id="pick" type="button">Choose photos</button>
+      <p class="hint">HEIC or JPEG straight from the iPhone camera. You can pick several. On a computer you can also drop files here.</p>
+      <input id="file" type="file" accept="image/*,.heic,.heif" multiple hidden>
+    </div>
+    <div class="row">
+      <label class="field" for="size">Output
+        <select id="size">
+          <option value="mca">MCA upload: JPEG under 2 MB</option>
+          <option value="full">Full quality: up to 4096 px</option>
+        </select>
+      </label>
+      <span class="netnote" id="netnote">Photos stay on this device. Only the coordinates are sent to OpenStreetMap to look up the address and map tile.</span>
+    </div>
+  </section>
+
+  <section class="cards" id="cards" aria-live="polite"></section>
+
+  <div class="bulk" id="bulk" hidden>
+    <span class="status" id="bulkStatus"></span>
+    <button class="btn" id="saveAll" type="button">Save all geo-tagged photos</button>
+  </div>
+
+  <section class="notes" aria-label="Filing notes">
+    <article class="note">
+      <h2>Why it holds up</h2>
+      <ul>
+        <li>Latitude, longitude, date and time are read from the photo's own EXIF data. There is no field to edit them.</li>
+        <li>Photos with no GPS or no capture time are refused, never guessed.</li>
+        <li>The saved JPEG keeps the original GPS, capture time, time zone and camera details in its EXIF, so anyone can check the stamp against the file.</li>
+        <li>The file is marked as processed by GeoStamp India, so nothing about the edit is hidden.</li>
+        <li>Keep your original iPhone photos in case the ROC asks for them.</li>
+      </ul>
+    </article>
+    <article class="note">
+      <h2>What the ROC looks for</h2>
+      <ul>
+        <li><strong>Outside view:</strong> the building with the company name board clearly readable (name, CIN, address). Asked for in MGT-7 / MGT-7A from FY 2024-25 and in INC-22A.</li>
+        <li><strong>Inside view:</strong> the office with at least one director or KMP present, for INC-22A.</li>
+        <li>Take the photos at the registered office itself, in daylight, standing outside for a good GPS fix.</li>
+        <li>No screenshots, filters or edited copies.</li>
+      </ul>
+      <p class="small">Form rules change. Check the attachment instructions of the form on the MCA V3 portal before filing.</p>
+    </article>
+    <article class="note">
+      <h2>No location found?</h2>
+      <ol>
+        <li>iPhone Settings › Privacy &amp; Security › Location Services › Camera: set <em>While Using</em> and turn on <em>Precise Location</em>. Retake the photo.</li>
+        <li>iOS can remove location when a photo is picked from the Photo Library in a browser. Instead, in Photos tap Share › Options, turn on <em>Location</em> and <em>All Photos Data</em>, then <em>Save to Files</em>.</li>
+        <li>Here, tap Choose photos › <em>Browse</em> and pick the copy from Files.</li>
+        <li>On a computer, AirDrop or copy the originals over USB and choose them here.</li>
+      </ol>
+    </article>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
+<script>
+(() => {
+  "use strict";
+  const APP = "GeoStamp India";
+  const $ = (s) => document.querySelector(s);
+  const cardsEl = $("#cards");
+  const items = [];
+  let uid = 0;
+  let sizeMode = "mca";
+
+  /* ---------- host integration (claude.ai viewer vs. plain browser) ---------- */
+  const hosted = !!(window.claude && typeof window.claude.use === "function");
+  let downloads = null;
+  const dlReady = hosted
+    ? window.claude.use("downloads").then((d) => (downloads = d)).catch(() => null)
+    : Promise.resolve(null);
+  const net = { address: "unknown", map: "unknown" };
+  if (hosted) {
+    $("#netnote").textContent = "Photos stay on this device. Inside Claude the address and map lookups are blocked, so stamps carry coordinates, time and Plus Code. Open the standalone file in a normal browser to add the address and map.";
+  }
+
+  /* ---------- small helpers ---------- */
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const pad2 = (n) => String(n).padStart(2, "0");
+  const fmtBytes = (b) => (b >= 1e6 ? (b / 1e6).toFixed(2) + " MB" : Math.round(b / 1e3) + " KB");
+  const first = (v) => (v == null ? null : (ArrayBuffer.isView(v) || Array.isArray(v)) ? v[0] : v);
+  const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+  function parseExifDate(s) {
+    const m = /(\d{4})[:\-](\d{2})[:\-](\d{2})[ T](\d{2}):(\d{2}):(\d{2})/.exec(String(s || ""));
+    if (!m) return null;
+    const [y, mo, d, h, mi, se] = m.slice(1).map(Number);
+    if (y < 1990 || mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+    return { y, mo, d, h, mi, s: se, raw: m[0].replace(/-/g, ":").replace("T", " ") };
+  }
+  function parseOffset(s) {
+    const m = /^([+-])(\d{2}):?(\d{2})$/.exec(String(s || "").trim());
+    if (!m) return null;
+    return { text: `${m[1]}${m[2]}:${m[3]}`, minutes: (m[1] === "-" ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3])) };
+  }
+  function fmtCapture(dt, off) {
+    const wd = WEEKDAYS[new Date(Date.UTC(dt.y, dt.mo - 1, dt.d)).getUTCDay()];
+    const h12 = dt.h % 12 || 12, ampm = dt.h < 12 ? "AM" : "PM";
+    return `${wd}, ${pad2(dt.d)}/${pad2(dt.mo)}/${dt.y} ${pad2(h12)}:${pad2(dt.mi)} ${ampm}` + (off ? ` GMT ${off.text}` : "");
+  }
+  function toDecimal(v, ref) {
+    if (v == null) return null;
+    let d = typeof v === "number" ? v : (Number(v[0]) || 0) + (Number(v[1]) || 0) / 60 + (Number(v[2]) || 0) / 3600;
+    if (!Number.isFinite(d)) return null;
+    const r = String(ref || "").trim().toUpperCase();
+    if (r === "S" || r === "W") d = -Math.abs(d);
+    return d;
+  }
+  function toDMS(x, pos, neg) {
+    const a = Math.abs(x); const d = Math.floor(a); const mf = (a - d) * 60; const m = Math.floor(mf); const s = (mf - m) * 60;
+    return `${d}°${pad2(m)}′${s.toFixed(2).padStart(5, "0")}″ ${x >= 0 ? pos : neg}`;
+  }
+  // Open Location Code (Plus Code), 10 digits, ~14 m cell. Computed locally from the coordinates.
+  function plusCode(lat, lon) {
+    const A = "23456789CFGHJMPQRVWX";
+    let la = Math.floor((Math.min(90, Math.max(-90, lat)) + 90) * 8000);
+    let lo = Math.floor(((((lon + 180) % 360) + 360) % 360) * 8000);
+    la = Math.min(la, 180 * 8000 - 1);
+    const pairs = [];
+    for (let i = 0; i < 5; i++) { pairs.unshift(A[la % 20] + A[lo % 20]); la = Math.floor(la / 20); lo = Math.floor(lo / 20); }
+    return pairs.slice(0, 4).join("") + "+" + pairs[4];
+  }
+
+  /* ---------- metadata ---------- */
+  const EXIFR_OPTS = {
+    tiff: true, exif: true, gps: true, ifd1: false, interop: false, xmp: false, icc: false, iptc: false,
+    jfif: false, ihdr: false, makerNote: false, userComment: false,
+    reviveValues: false, translateValues: false, translateKeys: true, mergeOutput: true,
+  };
+  function findBytes(hay, needle, from = 0) {
+    outer: for (let i = from; i <= hay.length - needle.length; i++) {
+      for (let j = 0; j < needle.length; j++) if (hay[i + j] !== needle[j]) continue outer;
+      return i;
+    }
+    return -1;
+  }
+  async function readMeta(file) {
+    let meta = null;
+    try { meta = await exifr.parse(file, EXIFR_OPTS); } catch (e) { meta = null; }
+    const usable = meta && (meta.GPSLatitude != null || meta.DateTimeOriginal || meta.Make);
+    if (usable) return meta;
+    // Fallback: locate the EXIF TIFF block inside the container (some HEIC layouts) and parse it on its own.
+    try {
+      const buf = new Uint8Array(await file.arrayBuffer());
+      const sig = [0x45, 0x78, 0x69, 0x66, 0, 0];
+      let i = findBytes(buf, [...sig, 0x4d, 0x4d, 0x00, 0x2a]);
+      if (i < 0) i = findBytes(buf, [...sig, 0x49, 0x49, 0x2a, 0x00]);
+      if (i < 0) return meta || {};
+      const block = buf.subarray(i, Math.min(buf.length, i + 65000));
+      const L = block.length + 2;
+      const jpg = new Uint8Array(4 + 2 + block.length + 2);
+      jpg.set([0xff, 0xd8, 0xff, 0xe1, L >> 8, L & 255]); jpg.set(block, 6); jpg.set([0xff, 0xd9], 6 + block.length);
+      return (await exifr.parse(jpg, EXIFR_OPTS)) || meta || {};
+    } catch (e) { return meta || {}; }
+  }
+
+  function analyze(meta) {
+    const info = { checks: [], blocking: null };
+    const lat = toDecimal(meta.GPSLatitude, meta.GPSLatitudeRef);
+    const lon = toDecimal(meta.GPSLongitude, meta.GPSLongitudeRef);
+    const dt = parseExifDate(meta.DateTimeOriginal) || parseExifDate(meta.CreateDate);
+    const off = parseOffset(meta.OffsetTimeOriginal) || parseOffset(meta.OffsetTimeDigitized) || parseOffset(meta.OffsetTime);
+    info.meta = meta; info.dt = dt; info.off = off;
+
+    if (lat == null || lon == null || (Math.abs(lat) < 1e-7 && Math.abs(lon) < 1e-7)) {
+      info.blocking = "This photo has no GPS location in its metadata, so it can't be geo-tagged honestly.";
+      return info;
+    }
+    info.lat = lat; info.lon = lon;
+    info.pc = plusCode(lat, lon);
+    if (!dt) {
+      info.blocking = "This photo has no original capture date and time in its metadata.";
+      return info;
+    }
+    info.checks.push({ lvl: "ok", text: "GPS location found in the original photo data" });
+    info.checks.push({ lvl: "ok", text: "Capture date and time found" + (off ? ` (time zone GMT ${off.text})` : "") });
+    if (!off) info.checks.push({ lvl: "info", text: "No time zone saved with the photo, so the stamp shows local camera time without GMT offset." });
+
+    const inIndia = lat >= 6 && lat <= 37.6 && lon >= 68 && lon <= 97.5;
+    info.checks.push(inIndia
+      ? { lvl: "ok", text: "Coordinates are inside India" }
+      : { lvl: "warn", text: "Coordinates are outside India. Check this is the right photo." });
+
+    const acc = Number(meta.GPSHPositioningError);
+    if (Number.isFinite(acc) && acc > 0) {
+      info.acc = acc;
+      info.checks.push(acc <= 65
+        ? { lvl: "ok", text: `Location accuracy ±${Math.round(acc)} m` }
+        : { lvl: "warn", text: `Location accuracy is only ±${Math.round(acc)} m. Retake outdoors near the entrance for a tighter fix.` });
+    }
+
+    if (off && meta.GPSDateStamp && meta.GPSTimeStamp) {
+      const g = parseExifDate(String(meta.GPSDateStamp) + " 00:00:00");
+      const t = meta.GPSTimeStamp;
+      if (g && t && t.length >= 3) {
+        const gpsUtc = Date.UTC(g.y, g.mo - 1, g.d, Number(t[0]), Number(t[1]), 0) + Number(t[2]) * 1000;
+        const capUtc = Date.UTC(dt.y, dt.mo - 1, dt.d, dt.h, dt.mi, dt.s) - off.minutes * 60000;
+        const diff = Math.abs(capUtc - gpsUtc) / 60000;
+        if (diff > 15) info.checks.push({ lvl: "warn", text: `GPS fix is ${Math.round(diff)} min away from the capture time, so the location may be stale.` });
+        else info.checks.push({ lvl: "ok", text: "GPS fix time matches the capture time" });
+      }
+    }
+
+    const make = String(meta.Make || "").trim(), model = String(meta.Model || "").trim();
+    info.camera = [make, model.startsWith(make) ? model.slice(make.length).trim() : model].filter(Boolean).join(" ");
+    if (!make && !model) info.checks.push({ lvl: "warn", text: "No camera make or model saved. Screenshots and edited copies look like this." });
+    else if (!/apple/i.test(make)) info.checks.push({ lvl: "info", text: `Taken on ${info.camera}. Works the same as an iPhone photo.` });
+
+    const sw = String(meta.Software || "").trim();
+    if (sw && !/^\d+(\.\d+)*$/.test(sw) && !/^iOS/i.test(sw)) {
+      info.checks.push({ lvl: "warn", text: `Saved by "${sw}", so it may be an edited copy. Use the original camera photo if you can.` });
+    }
+    return info;
+  }
+
+  /* ---------- address + map (OpenStreetMap; optional) ---------- */
+  const geoCache = new Map();
+  let lastGeo = 0;
+  async function lookupAddress(lat, lon) {
+    const key = lat.toFixed(5) + "," + lon.toFixed(5);
+    if (geoCache.has(key)) return geoCache.get(key);
+    const wait = 1100 - (Date.now() - lastGeo);
+    if (wait > 0) await sleep(wait);
+    lastGeo = Date.now();
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat.toFixed(7)}&lon=${lon.toFixed(7)}&zoom=18&addressdetails=1&accept-language=en`;
+      const r = await fetch(url, { signal: ctrl.signal, headers: { Accept: "application/json" } });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const j = await r.json();
+      if (!j || !j.display_name) throw new Error("no result");
+      const a = j.address || {};
+      const area = a.suburb || a.neighbourhood || a.quarter || a.city_district || a.village || a.hamlet || a.town;
+      const city = a.city || a.town || a.village || a.municipality || a.county || a.state_district;
+      const parts = [];
+      for (const p of [area, city, a.state, a.country]) if (p && !parts.includes(p)) parts.push(p);
+      // Compact postal line: street, locality, city, state + PIN, country (skips municipal/district layers)
+      const street = [a.house_number, a.road].filter(Boolean).join(" ");
+      const seen = new Set(); const line = [];
+      for (const p of [street, a.neighbourhood, a.suburb, a.quarter, city]) {
+        if (p && !seen.has(p.toLowerCase())) { seen.add(p.toLowerCase()); line.push(p); }
+      }
+      const statePin = [a.state, a.postcode].filter(Boolean).join(" ");
+      if (statePin) line.push(statePin);
+      if (a.country) line.push(a.country);
+      const res = { title: parts.join(", "), line: line.length >= 3 ? line.join(", ") : j.display_name };
+      geoCache.set(key, res);
+      net.address = "ok";
+      return res;
+    } catch (e) {
+      net.address = net.address === "ok" ? "ok" : "off";
+      return null;
+    } finally { clearTimeout(timer); }
+  }
+
+  function loadImg(src, cors) {
+    return new Promise((res, rej) => {
+      const im = new Image();
+      if (cors) im.crossOrigin = "anonymous";
+      im.decoding = "async";
+      im.onload = () => res(im);
+      im.onerror = () => rej(new Error("image failed to load"));
+      im.src = src;
+    });
+  }
+  const mapCache = new Map();
+  async function buildMap(lat, lon) {
+    const key = lat.toFixed(5) + "," + lon.toFixed(5);
+    if (mapCache.has(key)) return mapCache.get(key);
+    const z = 17, n = 2 ** z, SIZE = 512;
+    const latR = (lat * Math.PI) / 180;
+    const cx = ((lon + 180) / 360) * n * 256;
+    const cy = ((1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / Math.PI) / 2) * n * 256;
+    const x0 = cx - SIZE / 2, y0 = cy - SIZE / 2;
+    const c = document.createElement("canvas"); c.width = c.height = SIZE;
+    const g = c.getContext("2d");
+    const jobs = [];
+    for (let tx = Math.floor(x0 / 256); tx <= Math.floor((x0 + SIZE - 1) / 256); tx++) {
+      for (let ty = Math.floor(y0 / 256); ty <= Math.floor((y0 + SIZE - 1) / 256); ty++) {
+        const wx = ((tx % n) + n) % n;
+        jobs.push(loadImg(`https://tile.openstreetmap.org/${z}/${wx}/${ty}.png`, true).then((im) => g.drawImage(im, tx * 256 - x0, ty * 256 - y0)));
+      }
+    }
+    try {
+      await Promise.race([Promise.all(jobs), sleep(9000).then(() => { throw new Error("timeout"); })]);
+      g.getImageData(0, 0, 1, 1); // throws if tiles tainted the canvas
+      net.map = "ok";
+      mapCache.set(key, c);
+      return c;
+    } catch (e) {
+      net.map = net.map === "ok" ? "ok" : "off";
+      return null;
+    }
+  }
+
+  /* ---------- decoding ---------- */
+  const isHeic = (f) => /\.(heic|heif)$/i.test(f.name) || /hei[cf]/i.test(f.type);
+  let heicLib = null;
+  function loadHeicLib() {
+    if (heicLib) return heicLib;
+    heicLib = new Promise((res, rej) => {
+      const s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js";
+      s.onload = () => (window.heic2any ? res(window.heic2any) : rej(new Error("HEIC decoder failed to load")));
+      s.onerror = () => rej(new Error("HEIC decoder failed to load"));
+      document.head.appendChild(s);
+    });
+    return heicLib;
+  }
+  async function decodeBlob(blob) {
+    try { return await createImageBitmap(blob, { imageOrientation: "from-image" }); } catch (e) { /* next */ }
+    const url = URL.createObjectURL(blob);
+    try { return await loadImg(url, false); } finally { setTimeout(() => URL.revokeObjectURL(url), 30000); }
+  }
+  async function decodeFile(file) {
+    try { return await decodeBlob(file); } catch (e) {
+      if (!isHeic(file)) throw new Error("This browser can't open this image file.");
+    }
+    const heic2any = await loadHeicLib();
+    const out = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.95 });
+    return decodeBlob(Array.isArray(out) ? out[0] : out);
+  }
+
+  /* ---------- stamp rendering ---------- */
+  const STAMP_FONT = '"IBM Plex Sans", "Helvetica Neue", Helvetica, Arial, sans-serif';
+  let fontsReady = null;
+  function ensureFonts() {
+    if (!fontsReady) {
+      fontsReady = document.fonts
+        ? Promise.all(["400", "600", "700"].map((w) => document.fonts.load(`${w} 40px "IBM Plex Sans"`))).catch(() => null)
+        : Promise.resolve();
+      fontsReady = Promise.race([fontsReady, sleep(2500)]);
+    }
+    return fontsReady;
+  }
+  function stampLines(info, addr) {
+    const meta = [`Plus Code ${info.pc}`];
+    if (info.acc) meta.push(`±${Math.round(info.acc)} m`);
+    if (info.camera) meta.push(info.camera);
+    return {
+      title: addr ? addr.title : "Geo-tagged photo",
+      address: addr ? addr.line : "",
+      coords: `Lat ${info.lat.toFixed(6)}°   Long ${info.lon.toFixed(6)}°`,
+      when: fmtCapture(info.dt, info.off),
+      meta: meta.join("  ·  "),
+    };
+  }
+  function wrap(g, text, maxW, maxLines) {
+    const words = String(text).split(/\s+/).filter(Boolean);
+    const lines = []; let cur = "";
+    for (const w of words) {
+      const t = cur ? cur + " " + w : w;
+      if (g.measureText(t).width <= maxW || !cur) cur = t;
+      else { lines.push(cur); cur = w; }
+    }
+    if (cur) lines.push(cur);
+    if (lines.length > maxLines) {
+      const kept = lines.slice(0, maxLines);
+      let last = kept[maxLines - 1] + "…";
+      while (g.measureText(last).width > maxW && last.length > 2) last = last.slice(0, -2) + "…";
+      kept[maxLines - 1] = last; return kept;
+    }
+    return lines.map((l) => {
+      let s = l; if (g.measureText(s).width <= maxW) return s;
+      while (g.measureText(s + "…").width > maxW && s.length > 1) s = s.slice(0, -1);
+      return s + "…";
+    });
+  }
+  function roundRect(g, x, y, w, h, r) {
+    g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+  }
+  function drawStamp(g, W, H, L, map) {
+    const S = Math.min(W, H);
+    const margin = Math.round(S * 0.024), pad = Math.round(S * 0.022), gap = Math.round(S * 0.02);
+    const fT = S * 0.036, fB = S * 0.0265, fS = S * 0.0215;
+    const panelW = W - margin * 2;
+    const mapSize = map ? Math.round(Math.min(S * 0.24, panelW * 0.3)) : 0;
+    const textX = margin + pad + (map ? mapSize + gap : 0);
+    const textW = panelW - pad * 2 - (map ? mapSize + gap : 0);
+
+    const rows = [];
+    g.font = `700 ${fT}px ${STAMP_FONT}`;
+    wrap(g, L.title, textW, 1).forEach((t) => rows.push({ t, f: `700 ${fT}px ${STAMP_FONT}`, s: fT, c: "#ffffff" }));
+    if (L.address) {
+      g.font = `400 ${fB}px ${STAMP_FONT}`;
+      wrap(g, L.address, textW, 2).forEach((t) => rows.push({ t, f: `400 ${fB}px ${STAMP_FONT}`, s: fB, c: "rgba(255,255,255,0.9)" }));
+    }
+    g.font = `600 ${fB}px ${STAMP_FONT}`;
+    wrap(g, L.coords, textW, 1).forEach((t) => rows.push({ t, f: `600 ${fB}px ${STAMP_FONT}`, s: fB, c: "#ffffff" }));
+    wrap(g, L.when, textW, 1).forEach((t) => rows.push({ t, f: `600 ${fB}px ${STAMP_FONT}`, s: fB, c: "#ffffff" }));
+    g.font = `400 ${fS}px ${STAMP_FONT}`;
+    wrap(g, L.meta, textW, 1).forEach((t) => rows.push({ t, f: `400 ${fS}px ${STAMP_FONT}`, s: fS, c: "rgba(255,255,255,0.78)" }));
+
+    const lh = 1.34;
+    const textH = rows.reduce((h, r) => h + r.s * lh, 0);
+    const innerH = Math.max(textH, mapSize);
+    const panelH = Math.round(innerH + pad * 2);
+    const px = margin, py = H - margin - panelH;
+
+    g.save();
+    roundRect(g, px, py, panelW, panelH, Math.round(S * 0.016));
+    g.fillStyle = "rgba(10, 16, 20, 0.62)"; g.fill();
+    g.restore();
+
+    if (map) {
+      const mx = px + pad, my = py + pad + Math.round((innerH - mapSize) / 2);
+      g.save();
+      roundRect(g, mx, my, mapSize, mapSize, Math.round(S * 0.01)); g.clip();
+      g.imageSmoothingQuality = "high";
+      g.drawImage(map, mx, my, mapSize, mapSize);
+      // pin
+      const cx = mx + mapSize / 2, cy = my + mapSize / 2, r = mapSize * 0.06;
+      g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy - r * 1.9, r, Math.PI * 0.82, Math.PI * 0.18, false); g.closePath();
+      g.fillStyle = "#d93025"; g.fill(); g.lineWidth = Math.max(1, r * 0.22); g.strokeStyle = "#ffffff"; g.stroke();
+      g.beginPath(); g.arc(cx, cy - r * 1.9, r * 0.38, 0, Math.PI * 2); g.fillStyle = "#ffffff"; g.fill();
+      // attribution
+      const af = Math.max(9, mapSize * 0.05);
+      g.font = `400 ${af}px ${STAMP_FONT}`;
+      const at = "© OpenStreetMap", aw = g.measureText(at).width;
+      g.fillStyle = "rgba(255,255,255,0.85)"; g.fillRect(mx + mapSize - aw - af * 0.8, my + mapSize - af * 1.5, aw + af * 0.8, af * 1.5);
+      g.fillStyle = "#333"; g.textBaseline = "middle"; g.fillText(at, mx + mapSize - aw - af * 0.4, my + mapSize - af * 0.75);
+      g.restore();
+    }
+
+    let y = py + pad + Math.round((innerH - textH) / 2);
+    g.textBaseline = "top";
+    g.shadowColor = "rgba(0,0,0,0.35)"; g.shadowBlur = S * 0.004;
+    for (const r of rows) {
+      g.font = r.f; g.fillStyle = r.c;
+      g.fillText(r.t, textX, y + (r.s * lh - r.s) / 2);
+      y += r.s * lh;
+    }
+    g.shadowBlur = 0; g.shadowColor = "transparent";
+  }
+
+  /* ---------- EXIF writer (big-endian TIFF inside an APP1 segment) ---------- */
+  const enc = new TextEncoder();
+  const asciiE = (tag, s) => { const b = enc.encode(String(s).replace(/[^\x20-\x7e]/g, "?")); const u = new Uint8Array(b.length + 1); u.set(b); return { tag, type: 2, count: u.length, bytes: u }; };
+  const numE = (tag, type, size, vals) => {
+    const u = new Uint8Array(size * vals.length), dv = new DataView(u.buffer);
+    vals.forEach((v, i) => (size === 1 ? dv.setUint8(i, v) : size === 2 ? dv.setUint16(i * 2, v) : dv.setUint32(i * 4, v)));
+    return { tag, type, count: vals.length, bytes: u };
+  };
+  const byteE = (tag, ...v) => numE(tag, 1, 1, v);
+  const shortE = (tag, ...v) => numE(tag, 3, 2, v);
+  const longE = (tag, ...v) => numE(tag, 4, 4, v);
+  const ratE = (tag, ...pairs) => {
+    const u = new Uint8Array(8 * pairs.length), dv = new DataView(u.buffer);
+    pairs.forEach(([n, d], i) => { dv.setUint32(i * 8, Math.max(0, Math.min(4294967295, Math.round(n)))); dv.setUint32(i * 8 + 4, d); });
+    return { tag, type: 5, count: pairs.length, bytes: u };
+  };
+  const undefE = (tag, bytes) => ({ tag, type: 7, count: bytes.length, bytes });
+  const rat = (v, den) => [Math.round(Math.abs(v) * den), den];
+  const dmsRat = (x) => { const a = Math.abs(x); const d = Math.floor(a); const mf = (a - d) * 60; const m = Math.floor(mf); const s = (mf - m) * 60; return [[d, 1], [m, 1], [Math.round(s * 10000), 10000]]; };
+
+  function ifdSize(es) { let s = 2 + 12 * es.length + 4; for (const e of es) if (e.bytes.length > 4) s += e.bytes.length + (e.bytes.length & 1); return s; }
+  function writeIfd(dv, u8, off, es) {
+    es.sort((a, b) => a.tag - b.tag);
+    dv.setUint16(off, es.length);
+    let data = off + 2 + 12 * es.length + 4;
+    es.forEach((e, i) => {
+      const p = off + 2 + 12 * i;
+      dv.setUint16(p, e.tag); dv.setUint16(p + 2, e.type); dv.setUint32(p + 4, e.count);
+      if (e.bytes.length <= 4) u8.set(e.bytes, p + 8);
+      else { dv.setUint32(p + 8, data); u8.set(e.bytes, data); data += e.bytes.length + (e.bytes.length & 1); }
+    });
+    dv.setUint32(off + 2 + 12 * es.length, 0);
+  }
+  function buildTiff(ifd0, exif, gps) {
+    const exifPtr = longE(0x8769, 0), gpsPtr = longE(0x8825, 0);
+    const i0 = [...ifd0, exifPtr, gpsPtr];
+    const offE = 8 + ifdSize(i0), offG = offE + ifdSize(exif);
+    exifPtr.bytes = longE(0, offE).bytes; gpsPtr.bytes = longE(0, offG).bytes;
+    const u8 = new Uint8Array(offG + ifdSize(gps)), dv = new DataView(u8.buffer);
+    u8.set([0x4d, 0x4d, 0x00, 0x2a, 0, 0, 0, 8]);
+    writeIfd(dv, u8, 8, i0); writeIfd(dv, u8, offE, exif); writeIfd(dv, u8, offG, gps);
+    return u8;
+  }
+  function exifFor(info, fileName, W, H) {
+    const m = info.meta, now = new Date();
+    const tz = -now.getTimezoneOffset(), tzs = (tz >= 0 ? "+" : "-") + pad2(Math.floor(Math.abs(tz) / 60)) + ":" + pad2(Math.abs(tz) % 60);
+    const nowStr = `${now.getFullYear()}:${pad2(now.getMonth() + 1)}:${pad2(now.getDate())} ${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
+    const ifd0 = [
+      asciiE(0x000b, APP),
+      asciiE(0x010e, `Geo-tag stamp added from the original photo metadata. GPS position and capture time are unaltered. Source file: ${fileName}`),
+      shortE(0x0112, 1), ratE(0x011a, [72, 1]), ratE(0x011b, [72, 1]), shortE(0x0128, 2),
+      asciiE(0x0132, nowStr),
+    ];
+    if (m.Make) ifd0.push(asciiE(0x010f, m.Make));
+    if (m.Model) ifd0.push(asciiE(0x0110, m.Model));
+    if (m.Software) ifd0.push(asciiE(0x0131, m.Software));
+
+    const exif = [
+      undefE(0x9000, enc.encode("0232")),
+      asciiE(0x9003, info.dt.raw),
+      asciiE(0x9004, (parseExifDate(m.CreateDate) || info.dt).raw),
+      asciiE(0x9010, tzs),
+      shortE(0xa001, 1), longE(0xa002, W), longE(0xa003, H),
+    ];
+    if (info.off) exif.push(asciiE(0x9011, info.off.text), asciiE(0x9012, (parseOffset(m.OffsetTimeDigitized) || info.off).text));
+    if (m.SubSecTimeOriginal != null) exif.push(asciiE(0x9291, m.SubSecTimeOriginal));
+    if (m.LensMake) exif.push(asciiE(0xa433, m.LensMake));
+    if (m.LensModel) exif.push(asciiE(0xa434, m.LensModel));
+
+    const gps = [
+      byteE(0x0000, 2, 2, 0, 0),
+      asciiE(0x0001, info.lat >= 0 ? "N" : "S"), ratE(0x0002, ...dmsRat(info.lat)),
+      asciiE(0x0003, info.lon >= 0 ? "E" : "W"), ratE(0x0004, ...dmsRat(info.lon)),
+    ];
+    const alt = Number(m.GPSAltitude);
+    if (Number.isFinite(alt)) {
+      const below = Number(first(m.GPSAltitudeRef)) === 1;
+      gps.push(byteE(0x0005, below ? 1 : 0), ratE(0x0006, rat(alt, 1000)));
+    }
+    const ts = m.GPSTimeStamp;
+    if (ts && ts.length >= 3) gps.push(ratE(0x0007, [Number(ts[0]), 1], [Number(ts[1]), 1], rat(Number(ts[2]), 1000)));
+    if (m.GPSSpeed != null && Number.isFinite(Number(m.GPSSpeed))) gps.push(asciiE(0x000c, m.GPSSpeedRef || "K"), ratE(0x000d, rat(Number(m.GPSSpeed), 1000)));
+    if (m.GPSImgDirection != null && Number.isFinite(Number(m.GPSImgDirection))) gps.push(asciiE(0x0010, m.GPSImgDirectionRef || "T"), ratE(0x0011, rat(Number(m.GPSImgDirection), 1000)));
+    if (m.GPSDateStamp) gps.push(asciiE(0x001d, m.GPSDateStamp));
+    if (info.acc) gps.push(ratE(0x001f, rat(info.acc, 1000)));
+    return buildTiff(ifd0, exif, gps);
+  }
+  async function attachExif(jpeg, tiff) {
+    const buf = new Uint8Array(await jpeg.arrayBuffer());
+    let p = 2;
+    while (buf[p] === 0xff && (buf[p + 1] === 0xe0 || buf[p + 1] === 0xe1)) p += 2 + ((buf[p + 2] << 8) | buf[p + 3]);
+    const len = 2 + 6 + tiff.length;
+    const head = new Uint8Array([0xff, 0xd8, 0xff, 0xe1, len >> 8, len & 255, 0x45, 0x78, 0x69, 0x66, 0, 0]);
+    return new Blob([head, tiff, buf.subarray(p)], { type: "image/jpeg" });
+  }
+
+  /* ---------- output ---------- */
+  const toJpeg = (c, q) => new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error("Could not create the JPEG."))), "image/jpeg", q));
+  async function renderOutput(src, info, addr, map, fileName, mode) {
+    await ensureFonts();
+    const sw = src.width, sh = src.height;
+    const cfg = mode === "full" ? { edge: 4096, limit: Infinity, q: 0.92 } : { edge: 2560, limit: 1990000, q: 0.9 };
+    let scale = Math.min(1, cfg.edge / Math.max(sw, sh), Math.sqrt(16e6 / (sw * sh)));
+    const lines = stampLines(info, addr);
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const W = Math.round(sw * scale), H = Math.round(sh * scale);
+      const c = document.createElement("canvas"); c.width = W; c.height = H;
+      const g = c.getContext("2d");
+      g.imageSmoothingQuality = "high";
+      g.drawImage(src, 0, 0, W, H);
+      drawStamp(g, W, H, lines, map);
+      let q = cfg.q, blob;
+      for (;;) { blob = await toJpeg(c, q); if (blob.size <= cfg.limit || q <= 0.62) break; q -= 0.07; }
+      c.width = c.height = 0;
+      const out = await attachExif(blob, exifFor(info, fileName, W, H));
+      if (out.size <= cfg.limit) return { blob: out, w: W, h: H };
+      scale *= 0.82;
+    }
+    throw new Error("Could not bring the file under 2 MB. Try Full quality instead.");
+  }
+
+  /* ---------- saving ---------- */
+  const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  async function saveItem(it) {
+    if (!it.out) return "skip";
+    const name = it.outName;
+    await dlReady;
+    if (downloads) {
+      try { await downloads.save({ filename: name, data: it.out.blob }); return "saved"; }
+      catch (e) {
+        if (e && e.code === "declined") return "declined";
+        if (e && e.code === "rate_limited") { await sleep(1500); try { await downloads.save({ filename: name, data: it.out.blob }); return "saved"; } catch (e2) { return "failed"; } }
+        return "failed";
+      }
+    }
+    if (hosted) return "unavailable";
+    const file = new File([it.out.blob], name, { type: "image/jpeg" });
+    if (isIOS && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file] }); return "saved"; } catch (e) { if (e && e.name === "AbortError") return "declined"; }
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(it.out.blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    return "saved";
+  }
+
+  /* ---------- UI ---------- */
+  function chipFor(it) {
+    if (it.status === "working") return `<span class="chip info">Working…</span>`;
+    if (it.status === "rejected") return `<span class="chip bad">Not geo-tagged</span>`;
+    if (it.status === "error") return `<span class="chip bad">Couldn't process</span>`;
+    const w = it.info.checks.filter((c) => c.lvl === "warn").length;
+    return w ? `<span class="chip warn">Ready · ${w} to review</span>` : `<span class="chip ok">Ready for filing</span>`;
+  }
+  function factsTable(info, addr, out) {
+    const maps = `https://www.google.com/maps/search/?api=1&query=${info.lat.toFixed(6)},${info.lon.toFixed(6)}`;
+    let rows = `
+      <dt>Latitude</dt><dd class="mono">${info.lat.toFixed(6)}° <span style="color:var(--muted)">${toDMS(info.lat, "N", "S")}</span></dd>
+      <dt>Longitude</dt><dd class="mono">${info.lon.toFixed(6)}° <span style="color:var(--muted)">${toDMS(info.lon, "E", "W")}</span></dd>
+      <dt>Captured</dt><dd>${esc(fmtCapture(info.dt, info.off))}</dd>
+      <dt>Plus Code</dt><dd class="mono">${info.pc}</dd>
+      <dt>Address</dt><dd>${addr ? esc(addr.line) : `<span style="color:var(--muted)">Not looked up here. Coordinates, time and Plus Code are on the stamp.</span>`}</dd>`;
+    if (info.camera) rows += `<dt>Camera</dt><dd>${esc(info.camera)}</dd>`;
+    if (out) rows += `<dt>Output</dt><dd class="mono">${out.w} × ${out.h} px · ${fmtBytes(out.blob.size)}</dd>`;
+    rows += `<dt>Check spot</dt><dd><a href="${maps}" target="_blank" rel="noopener">Open in Google Maps</a></dd>`;
+    return `<dl class="kv">${rows}</dl>`;
+  }
+  function checksList(info) {
+    return `<ul class="checks">${info.checks.map((c) => `<li><span class="dot ${c.lvl}"></span><span>${esc(c.text)}</span></li>`).join("")}</ul>`;
+  }
+  function renderItem(it) {
+    let el = document.getElementById("it-" + it.id);
+    if (!el) { el = document.createElement("article"); el.className = "card"; el.id = "it-" + it.id; cardsEl.appendChild(el); }
+    let shot, body = "";
+    if (it.status === "working") {
+      shot = `<div class="spin" role="img" aria-label="Processing"></div>`;
+      body = `<p class="status">Reading metadata and drawing the stamp…</p>`;
+    } else if (it.status === "rejected") {
+      shot = `<p class="placeholder">No geo-tagged copy made</p>`;
+      body = `<div class="fix"><strong>${esc(it.info.blocking)}</strong>
+        <ol>
+          <li>Check the photo was taken with Location Services on for Camera (Settings › Privacy &amp; Security › Location Services › Camera).</li>
+          <li>The browser may have removed the location when you picked from the Photo Library. In Photos tap Share › Options, turn on <em>Location</em> and <em>All Photos Data</em>, Save to Files, then choose it here with <em>Browse</em>.</li>
+        </ol></div>`;
+    } else if (it.status === "error") {
+      shot = `<p class="placeholder">Preview unavailable</p>`;
+      body = `<p class="status err">${esc(it.error)}</p>`;
+    } else {
+      shot = `<img src="${it.url}" alt="Geo-tagged version of ${esc(it.file.name)}">`;
+      body = factsTable(it.info, it.addr, it.out) + checksList(it.info) +
+        `<div class="row"><button class="btn" type="button" data-save="${it.id}">Save JPEG</button><span class="status" data-msg="${it.id}"></span></div>`;
+    }
+    el.innerHTML = `<div class="shot">${shot}</div><div class="facts"><div class="top"><span class="fname">${esc(it.file.name)}</span>${chipFor(it)}</div>${body}</div>`;
+    updateBulk();
+  }
+  function updateBulk() {
+    const ready = items.filter((i) => i.status === "ready");
+    const rejected = items.filter((i) => i.status === "rejected" || i.status === "error").length;
+    $("#bulk").hidden = items.length === 0;
+    $("#saveAll").disabled = ready.length === 0;
+    $("#bulkStatus").textContent = `${ready.length} ready` + (rejected ? ` · ${rejected} without usable location` : "") + netText();
+  }
+  function netText() {
+    if (net.address === "off" && net.map === "off") return " · Address and map lookup unavailable here, so stamps show coordinates, time and Plus Code.";
+    return "";
+  }
+
+  let queue = Promise.resolve();
+  function enqueue(it) { queue = queue.then(() => processItem(it)).catch(() => {}); }
+  async function processItem(it) {
+    it.status = "working"; renderItem(it);
+    try {
+      if (!it.info) it.info = analyze(await readMeta(it.file));
+      if (it.info.blocking) { it.status = "rejected"; renderItem(it); return; }
+      if (it.addr === undefined) {
+        const [addr, map] = await Promise.all([lookupAddress(it.info.lat, it.info.lon), buildMap(it.info.lat, it.info.lon)]);
+        it.addr = addr; it.map = map;
+      }
+      const src = await decodeFile(it.file);
+      const out = await renderOutput(src, it.info, it.addr, it.map, it.file.name, sizeMode);
+      if (src.close) src.close();
+      if (it.url) URL.revokeObjectURL(it.url);
+      it.out = out; it.url = URL.createObjectURL(out.blob);
+      it.outName = it.file.name.replace(/\.[^.]+$/, "") + "_geotagged.jpg";
+      it.status = "ready";
+    } catch (e) {
+      it.status = "error"; it.error = (e && e.message) || "Something went wrong while processing this photo.";
+    }
+    renderItem(it);
+  }
+  function addFiles(list) {
+    const files = [...list].filter((f) => /^image\//.test(f.type) || /\.(heic|heif|jpe?g|png)$/i.test(f.name));
+    if (!files.length) return;
+    const ex = document.getElementById("example"); if (ex) ex.remove();
+    for (const f of files) { const it = { id: ++uid, file: f, status: "working" }; items.push(it); renderItem(it); enqueue(it); }
+  }
+
+  $("#pick").addEventListener("click", () => $("#file").click());
+  $("#file").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
+  const drop = $("#drop");
+  ["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", (e) => addFiles(e.dataTransfer.files));
+  $("#size").addEventListener("change", (e) => {
+    sizeMode = e.target.value;
+    for (const it of items) if (it.status === "ready") enqueue(it);
+  });
+  const MSG = { saved: "Saved", declined: "Save cancelled", failed: "Couldn't save. Try again.", unavailable: "Saving isn't available in this view. Press and hold the preview, then choose Save to Photos." };
+  cardsEl.addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-save]"); if (!b) return;
+    const it = items.find((i) => i.id === Number(b.dataset.save));
+    const msg = cardsEl.querySelector(`[data-msg="${it.id}"]`);
+    b.disabled = true;
+    const r = await saveItem(it);
+    if (msg) msg.textContent = MSG[r] || "";
+    b.disabled = false;
+  });
+  $("#saveAll").addEventListener("click", async (e) => {
+    const b = e.currentTarget; b.disabled = true;
+    let n = 0;
+    for (const it of items.filter((i) => i.status === "ready")) {
+      const r = await saveItem(it);
+      if (r === "saved") n++;
+      if (r === "unavailable") { $("#bulkStatus").textContent = MSG.unavailable; b.disabled = false; return; }
+    }
+    $("#bulkStatus").textContent = `${n} saved`;
+    b.disabled = false;
+  });
+
+  /* ---------- example card so the first view shows the result ---------- */
+  async function renderExample() {
+    const W = 1600, H = 1200;
+    const c = document.createElement("canvas"); c.width = W; c.height = H;
+    const g = c.getContext("2d");
+    const sky = g.createLinearGradient(0, 0, 0, H * 0.55); sky.addColorStop(0, "#8fb9d8"); sky.addColorStop(1, "#d8e6ee");
+    g.fillStyle = sky; g.fillRect(0, 0, W, H);
+    g.fillStyle = "#6f7a80"; g.fillRect(0, H * 0.8, W, H * 0.2);
+    g.fillStyle = "#e8dccb"; g.fillRect(W * 0.12, H * 0.16, W * 0.76, H * 0.66);
+    g.fillStyle = "#cdbfa9"; g.fillRect(W * 0.12, H * 0.16, W * 0.76, H * 0.04);
+    for (let r = 0; r < 2; r++) for (let k = 0; k < 6; k++) {
+      g.fillStyle = "#5d7c8f"; g.fillRect(W * (0.17 + k * 0.115), H * (0.25 + r * 0.14), W * 0.07, H * 0.09);
+    }
+    g.fillStyle = "#123a52"; g.fillRect(W * 0.24, H * 0.53, W * 0.52, H * 0.09);
+    g.fillStyle = "#ffffff"; g.font = `700 ${H * 0.032}px ${STAMP_FONT}`; g.textBaseline = "middle"; g.textAlign = "center";
+    g.fillText("SAMPLE TRADERS PRIVATE LIMITED", W / 2, H * 0.562);
+    g.font = `400 ${H * 0.018}px ${STAMP_FONT}`; g.fillText("CIN U00000MH2026PTC000000 · Registered Office", W / 2, H * 0.598);
+    g.textAlign = "left";
+    g.fillStyle = "#3d3127"; g.fillRect(W * 0.45, H * 0.64, W * 0.1, H * 0.18);
+    // stylised map placeholder
+    const m = document.createElement("canvas"); m.width = m.height = 512; const mg = m.getContext("2d");
+    mg.fillStyle = "#efe9df"; mg.fillRect(0, 0, 512, 512);
+    mg.fillStyle = "#cfe3c4"; mg.fillRect(330, 40, 140, 120);
+    mg.strokeStyle = "#ffffff"; mg.lineCap = "round";
+    [[0, 180, 512, 210, 26], [150, 0, 190, 512, 22], [0, 400, 512, 360, 18], [380, 0, 330, 512, 14]].forEach(([a, b, cc, d, w]) => { mg.lineWidth = w; mg.beginPath(); mg.moveTo(a, b); mg.lineTo(cc, d); mg.stroke(); });
+    mg.strokeStyle = "#f4c96b"; mg.lineWidth = 10; mg.beginPath(); mg.moveTo(0, 180); mg.lineTo(512, 210); mg.stroke();
+    await ensureFonts();
+    const info = { lat: 19.065836, lon: 72.868542, pc: plusCode(19.065836, 72.868542), acc: 5, camera: "Apple iPhone 15",
+      dt: { y: 2026, mo: 11, d: 14, h: 11, mi: 42, s: 7 }, off: { text: "+05:30" } };
+    drawStamp(g, W, H, stampLines(info, { title: "Bandra Kurla Complex, Mumbai, Maharashtra, India", line: "G Block, Bandra Kurla Complex, Bandra East, Mumbai, Maharashtra 400051, India" }), m);
+    const url = URL.createObjectURL(await toJpeg(c, 0.85));
+    if (items.length) return;
+    const el = document.createElement("article"); el.className = "card example"; el.id = "example";
+    el.innerHTML = `<div class="shot"><img src="${url}" alt="Example of a geo-tagged office photo with the location stamp along the bottom"></div>
+      <div class="facts"><div class="top"><span class="fname">Example stamp</span><span class="chip info">Sample values</span></div>
+      <p>This is a drawn example, not a real photo. Your photos get the same stamp, filled from their own metadata:</p>
+      <ul class="checks">
+        <li><span class="dot ok"></span><span>Map tile with a pin at the photo's GPS position (when the map can be loaded)</span></li>
+        <li><span class="dot ok"></span><span>Area and full address looked up from the coordinates (when online)</span></li>
+        <li><span class="dot ok"></span><span>Latitude and longitude to six decimals</span></li>
+        <li><span class="dot ok"></span><span>Capture date, time and GMT offset exactly as the iPhone recorded them</span></li>
+        <li><span class="dot ok"></span><span>Plus Code, GPS accuracy and camera model</span></li>
+      </ul>
+      <p class="status">The saved JPEG also carries the original GPS and time in its EXIF data.</p></div>`;
+    cardsEl.prepend(el);
+  }
+  renderExample();
+})();
+</script>
+</body>
+</html>
